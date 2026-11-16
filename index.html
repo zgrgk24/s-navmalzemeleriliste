@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Özel Liste</title>
+    <style>
+        body {
+            background-color: #d8c3a5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px 10px;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        /* Şifre Ekranı Tasarımı */
+        #login-screen {
+            background: #fffef0;
+            padding: 35px 25px;
+            border-radius: 6px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            border-left: 4px solid #ff8a80;
+            text-align: center;
+            max-width: 380px;
+            width: 100%;
+            margin-top: 80px;
+        }
+
+        #login-screen h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+
+        #password-input {
+            width: 100%;
+            padding: 14px;
+            font-size: 1.3rem;
+            letter-spacing: 4px;
+            margin: 15px 0;
+            border: 2px solid #333;
+            border-radius: 5px;
+            font-family: 'Courier New', Courier, monospace;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        #login-btn {
+            width: 100%;
+            padding: 14px;
+            font-size: 1.1rem;
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+        }
+
+        #login-btn:active {
+            background-color: #1a252f;
+        }
+
+        #error-msg {
+            color: #e74c3c;
+            font-weight: bold;
+            margin-top: 12px;
+            display: none;
+        }
+
+        /* Gerçek Kağıt Görünümü */
+        .paper {
+            display: none;
+            background: #fffef0;
+            background-image: linear-gradient(#e1e1e1 1px, transparent 1px);
+            background-size: 100% 2.8rem;
+            width: 100%;
+            max-width: 600px;
+            padding: 40px 20px 40px 45px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+            border-left: 3px solid #ff8a80;
+            border-radius: 2px;
+            box-sizing: border-box;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-decoration: underline;
+            font-weight: bold;
+        }
+
+        .category-title {
+            font-size: 1.25rem;
+            color: #c0392b;
+            margin-top: 35px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-bottom: 2px solid #c0392b;
+            padding-bottom: 5px;
+            display: inline-block;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: flex-start;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #111;
+            font-weight: 600;
+            margin-bottom: 16px;
+            word-break: break-word;
+            transition: opacity 0.3s;
+        }
+
+        .checkbox-btn {
+            width: 26px;
+            height: 26px;
+            min-width: 26px;
+            border: 2.5px solid #333;
+            background-color: #fff;
+            margin-right: 15px;
+            margin-top: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 18px;
+            border-radius: 6px;
+            user-select: none;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .checkbox-btn.state-green {
+            background-color: #2ecc71;
+            color: white;
+            border-color: #27ae60;
+        }
+
+        .checkbox-btn.state-red {
+            background-color: #e74c3c;
+            color: white;
+            border-color: #c0392b;
+        }
+
+        .text-content {
+            flex: 1;
+        }
+
+        .done-text {
+            text-decoration: line-through;
+            color: #7f8c8d;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ŞİFRE GİRİŞ EKRANI -->
+<div id="login-screen">
+    <h2>🔒 Özel Liste</h2>
+    <p>Görüntülemek için şifreyi girin:</p>
+    <input type="password" inputmode="numeric" id="password-input" placeholder="••••">
+    <button id="login-btn">Giriş Yap</button>
+    <div id="error-msg">Hatalı şifre!</div>
+</div>
+
+<!-- LİSTE EKRANI (Şifre girilene kadar içi tamamen boştur) -->
+<div class="paper" id="main-paper"></div>
+
+<script>
+    const DOGRU_SIFRE = "2405";
+    const AUTH_KEY = "sinav_listesi_yetki_2405";
+
+    const loginScreen = document.getElementById("login-screen");
+    const mainPaper = document.getElementById("main-paper");
+    const passwordInput = document.getElementById("password-input");
+    const loginBtn = document.getElementById("login-btn");
+    const errorMsg = document.getElementById("error-msg");
+
+    const categories = [
+        {
+            title: "Kişisel Donanım",
+            items: [
+                "Eldiven",
+                "Bone",
+                "Önlük",
+                "Terlik",
+                "Sınav Giriş Belgesi + Kimlik",
+                "Maske",
+                "Sürahi",
+                "Tatlı Kaşığı",
+                "Streç Film"
+            ]
+        },
+        {
+            title: "Puding Hazırlığı",
+            items: [
+                "Kutulu Puding",
+                "Süt",
+                "Çilek",
+                "Sunum Kasesi",
+                "Rulo Kat (E.Çek)"
+            ]
+        },
+        {
+            title: "Limonata Hazırlığı",
+            items: [
+                "1 kg Limon",
+                "Nane",
+                "Şeker",
+                "Portakal",
+                "Süzek",
+                "Kadeh",
+                "Meyve Sıkacağı",
+                "Rende (F.Çek)"
+            ]
+        },
+        {
+            title: "Makarna Yapımı",
+            items: [
+                "1 Paket İnce Boru Makarna",
+                "Tava Yoğurdu",
+                "Sıvı Yağ",
+                "Toz Biber ve Karabiber",
+                "Pul Biber ve Et Suyu",
+                "Salça",
+                "Servis Tabağı",
+                "Kaşık ve Kevgir",
+                "Sos Tavası ve Sos Kaşığı",
+                "Çatal, Yemek Kaşığı ve Bıçak",
+                "Peçete, Havlu Peçete ve Islak Mendil"
+            ]
+        },
+        {
+            title: "Köfte Hazırlığı",
+            items: [
+                "10 Adet Köfte",
+                "Maşa",
+                "1 Adet Domates",
+                "Köfte Ekmeği (2 Adet)",
+                "Marul, Ketçap ve Mayonez",
+                "Köfte Tabağı ve Köfte Kağıdı"
+            ]
+        },
+        {
+            title: "Salata Malzemeleri",
+            items: [
+                "Marul",
+                "Maydanoz",
+                "Mor Lahana",
+                "Havuç",
+                "Çeri Domates",
+                "Kuzu Kulağı (Otu)",
+                "Roka ve Dereotu",
+                "Salata Tabağı",
+                "Limon",
+                "Zeytinyağı",
+                "Fazladan Çatal ve Kaşık",
+                "Evden Bıçak (2-3 Adet)",
+                "Salata Tahtası"
+            ]
+        }
+    ];
+
+    function updateButtonVisuals(btn, content, state) {
+        if (state === 0) {
+            btn.className = "checkbox-btn";
+            btn.textContent = "";
+            content.classList.remove("done-text");
+        } else if (state === 1) {
+            btn.className = "checkbox-btn state-green";
+            btn.textContent = "✓";
+            content.classList.add("done-text");
+        } else if (state === 2) {
+            btn.className = "checkbox-btn state-red";
+            btn.textContent = "✕";
+            content.classList.remove("done-text");
+        }
+    }
+
+    // Listeyi sadece şifre doğrulandıktan sonra ekrana çizer
+    function listeyiOlustur() {
+        document.title = "Sınav Malzeme Listesi";
+        loginScreen.remove(); // Şifre ekranını DOM'dan tamamen kaldır
+        mainPaper.style.display = "block";
+
+        const titleH1 = document.createElement("h1");
+        titleH1.textContent = "SINAV MALZEME LİSTESİ";
+        mainPaper.appendChild(titleH1);
+
+        const container = document.createElement("div");
+        container.id = "list-container";
+        mainPaper.appendChild(container);
+
+        const storageKey = "sinav_malzeme_listesi_v3";
+        const savedStates = JSON.parse(localStorage.getItem(storageKey)) || {};
+        let globalIndex = 0;
+
+        categories.forEach(cat => {
+            const catTitle = document.createElement("div");
+            catTitle.className = "category-title";
+            catTitle.textContent = cat.title;
+            container.appendChild(catTitle);
+
+            cat.items.forEach((text) => {
+                const currentIndex = globalIndex++;
+                const row = document.createElement("div");
+                row.className = "list-item";
+
+                const btn = document.createElement("div");
+                const content = document.createElement("div");
+                content.className = "text-content";
+                content.textContent = text;
+
+                let state = savedStates[currentIndex] || 0;
+                updateButtonVisuals(btn, content, state);
+
+                btn.addEventListener("click", () => {
+                    state = (state + 1) % 3;
+                    savedStates[currentIndex] = state;
+                    localStorage.setItem(storageKey, JSON.stringify(savedStates));
+                    updateButtonVisuals(btn, content, state);
+                });
+
+                row.appendChild(btn);
+                row.appendChild(content);
+                container.appendChild(row);
+            });
+        });
+    }
+
+    // Telefonda daha önce giriş yapıldıysa şifre sormadan doğrudan listeyi oluştur
+    if (localStorage.getItem(AUTH_KEY) === "true") {
+        listeyiOlustur();
+    }
+
+    function sifreKontrol() {
+        if (passwordInput.value.trim() === DOGRU_SIFRE) {
+            localStorage.setItem(AUTH_KEY, "true");
+            listeyiOlustur();
+        } else {
+            errorMsg.style.display = "block";
+            passwordInput.value = "";
+            passwordInput.focus();
+        }
+    }
+
+    loginBtn.addEventListener("click", sifreKontrol);
+    passwordInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") sifreKontrol();
+    });
+</script>
+
+</body>
+</html>
